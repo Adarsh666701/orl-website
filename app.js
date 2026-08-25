@@ -8,13 +8,14 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 import app from "./dist/server/server.js";
 
 const rootDirectory = path.dirname(fileURLToPath(import.meta.url));
 const clientDirectory = path.join(rootDirectory, "dist", "client");
-const port = Number.parseInt(process.env.PORT ?? "3000", 10);
-const host = process.env.HOST ?? "0.0.0.0";
+const port = Number.parseInt(process.env.PORT ?? "3000", 10) || 3000;
+const host = "0.0.0.0";
 
 const mimeTypes = {
   ".avif": "image/avif",
@@ -68,7 +69,7 @@ async function serveStaticFile(request, response, pathname) {
   if (request.method === "HEAD") {
     response.end();
   } else {
-    createReadStream(filePath).pipe(response);
+    await pipeline(createReadStream(filePath), response);
   }
   return true;
 }
@@ -106,7 +107,9 @@ async function handleRequest(request, response) {
     response.end();
     return;
   }
-  Readable.fromWeb(webResponse.body).pipe(response);
+  // Await the stream so SSR timeouts or aborted renders are handled by the
+  // request-level error boundary instead of becoming unhandled stream errors.
+  await pipeline(Readable.fromWeb(webResponse.body), response);
 }
 
 const server = http.createServer((request, response) => {
