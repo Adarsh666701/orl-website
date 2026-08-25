@@ -1,0 +1,14 @@
+{
+  "name": "Om Roadlines",
+  "short_name": "ORL",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "1835x855",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#071d49",
+  "background_color": "#071d49",
+  "display": "browser"
+}
